@@ -23,8 +23,7 @@
           self.overlays.default
         ];
       };
-      modules = [ self.nixosModules.satisfactory ];
-      version = self.shortRev or self.dirtyShortRev;
+      inherit (pkgs) lib;
     in
     {
       formatter.x86_64-linux = pkgs.nixfmt-rfc-style;
@@ -44,12 +43,23 @@
       packages.x86_64-linux = {
         default = pkgs.satisfactory-server;
 
-        docs = pkgs.callPackage ./pkgs/docs.nix {
-          inherit modules version;
-        };
+        docs =
+          let
+            eval = lib.evalModules {
+              modules = [
+                self.nixosModules.satisfactory
+                lib.types.noCheckForDocsModule
+              ];
+            };
+
+            doc = pkgs.nixosOptionsDoc {
+              inherit (eval) options;
+            };
+          in
+          doc.optionsCommonMark;
 
         tests.satisfactory-server = pkgs.callPackage ./tests/nixos.nix {
-          inherit modules;
+          imports = [ self.nixosModules.satisfactory ];
         };
 
         inherit (pkgs) satisfactory-server satisfactory-server-unwrapped;

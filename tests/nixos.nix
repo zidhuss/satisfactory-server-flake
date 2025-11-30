@@ -1,4 +1,4 @@
-{ modules, testers }:
+{ imports, testers }:
 testers.runNixOSTest {
   name = "satisfactory-server";
 
@@ -8,7 +8,7 @@ testers.runNixOSTest {
       cfg = config.services.satisfactory;
     in
     {
-      imports = modules;
+      inherit imports;
 
       services.satisfactory = {
         enable = true;
