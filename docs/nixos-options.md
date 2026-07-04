@@ -37,6 +37,53 @@ package
 
 
 
+## services\.satisfactory\.certificate
+
+
+
+Certificate files to use for the server API\.
+
+The files are copied into the server state directory and bind-mounted
+into the package's FactoryGame/Certificates directory at runtime\.
+
+
+
+*Type:*
+null or submodule
+
+
+
+*Default:*
+` null `
+
+
+
+## services\.satisfactory\.certificate\.chainFile
+
+
+
+Path to the certificate chain to expose to the server API\.
+
+
+
+*Type:*
+absolute path
+
+
+
+## services\.satisfactory\.certificate\.keyFile
+
+
+
+Path to the private key to expose to the server API\.
+
+
+
+*Type:*
+absolute path
+
+
+
 ## services\.satisfactory\.extraArgs
 
 
@@ -381,5 +428,4 @@ string
 
 *Default:*
 ` "satisfactory" `
-
 

@@ -9,6 +9,18 @@ let
   cfg = config.services.satisfactory;
 
   inherit (lib) mapAttrsToList types;
+  certificateEnabled = cfg.certificate != null;
+  certificateDir = "${cfg.stateDir}/FactoryGame/Certificates";
+  serverPackage =
+    if certificateEnabled then
+      if cfg.package ? withCertificateDirs then
+        cfg.package.withCertificateDirs {
+          certDir = certificateDir;
+        }
+      else
+        throw "services.satisfactory.certificate requires a package with passthru.withCertificateDirs"
+    else
+      cfg.package;
 
   iniFromSettings = {
     Engine = {
@@ -129,6 +141,29 @@ in
       description = "Whether to open the ports in the firewall.";
     };
 
+    certificate = lib.mkOption {
+      type = types.nullOr (types.submodule {
+        options = {
+          chainFile = lib.mkOption {
+            type = types.path;
+            description = "Path to the certificate chain to expose to the server API.";
+          };
+
+          keyFile = lib.mkOption {
+            type = types.path;
+            description = "Path to the private key to expose to the server API.";
+          };
+        };
+      });
+      default = null;
+      description = ''
+        Certificate files to use for the server API.
+
+        The files are copied into the server state directory and bind-mounted
+        into the package's FactoryGame/Certificates directory at runtime.
+      '';
+    };
+
     settings = lib.mkOption {
       description = "Satisfactory engine & game settings.";
       default = { };
@@ -243,9 +278,18 @@ in
       serviceConfig = {
         Type = "exec";
         User = cfg.user;
+        ExecStartPre = lib.optionals certificateEnabled [
+          "+${pkgs.writeShellScript "satisfactory-certificates" ''
+            set -euo pipefail
+
+            ${pkgs.coreutils}/bin/install -d -m 0750 -o "${cfg.user}" -g "${cfg.user}" "${certificateDir}"
+            ${pkgs.coreutils}/bin/install -m 0640 -o "${cfg.user}" -g "${cfg.user}" "${cfg.certificate.chainFile}" "${certificateDir}/cert_chain.pem"
+            ${pkgs.coreutils}/bin/install -m 0600 -o "${cfg.user}" -g "${cfg.user}" "${cfg.certificate.keyFile}" "${certificateDir}/private_key.pem"
+          ''}"
+        ];
         ExecStart = pkgs.writeShellScript "satisfactory-server" /* bash */ ''
           mkdir -p "${cfg.stateDir}/.config/Epic/FactoryGame"
-          ${lib.getExe cfg.package} ${lib.escapeShellArgs serverArgs}
+          ${lib.getExe serverPackage} ${lib.escapeShellArgs serverArgs}
         '';
       };
     };
