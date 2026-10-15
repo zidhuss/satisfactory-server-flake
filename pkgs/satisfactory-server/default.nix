@@ -8,12 +8,8 @@
   xdg-user-dirs,
 }:
 stdenvNoCC.mkDerivation (
-  finalAttrs:
-  let
-    mkFHS =
-      {
-        certDir ? null,
-      }:
+  finalAttrs: let
+    mkFHS = {certDir ? null}:
       buildFHSEnv {
         inherit (finalAttrs) name meta;
         runScript = lib.getExe finalAttrs.finalPackage;
@@ -29,27 +25,26 @@ stdenvNoCC.mkDerivation (
 
         passthru.withCertificateDirs = args: mkFHS args;
       };
-  in
-  {
+  in {
     name = "satisfactory-server";
-    version = "23855705";
+    version = "25782485";
 
-    binPath = lib.makeBinPath [ xdg-user-dirs ];
+    binPath = lib.makeBinPath [xdg-user-dirs];
 
     # https://steamdb.info/depot/1690802/history/
     src = fetchSteam {
       inherit (finalAttrs) name;
       appId = "1690800";
       depotId = "1690802";
-      manifestId = "2689605844763498299";
-      hash = "sha256-rE18FQWY36S4qy7A96zn/7mk6LUcRYb2hyF+l54CZeo=";
+      manifestId = "2874226577494387589";
+      hash = "sha256-8yMj8ZOfLlJlIeMxZctn/ghoQbbZxKcx783o0sGJuAs=";
     };
 
     dontBuild = true;
     dontConfigure = true;
     dontFixup = true;
 
-    nativeBuildInputs = [ makeWrapper ];
+    nativeBuildInputs = [makeWrapper];
 
     installPhase = ''
       runHook preInstall
@@ -69,7 +64,7 @@ stdenvNoCC.mkDerivation (
     '';
 
     passthru = {
-      fhs = mkFHS { };
+      fhs = mkFHS {};
       withCertificateDirs = args: mkFHS args;
     };
 
@@ -83,7 +78,7 @@ stdenvNoCC.mkDerivation (
         lib.sourceTypes.binaryNativeCode
       ];
       license = lib.licenses.unfree;
-      platforms = [ "x86_64-linux" ];
+      platforms = ["x86_64-linux"];
     };
   }
 )
